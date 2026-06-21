@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { EtsyListingView } from "@/types";
 
@@ -34,13 +35,21 @@ export type AiCredentials = {
   savedAt: string;
 };
 
-const dataDir = path.join(process.cwd(), "data");
+const dataDir = process.env.VERCEL
+  ? path.join(os.tmpdir(), "pinpilot-data")
+  : path.join(process.cwd(), "data");
 const etsyImportPath = path.join(dataDir, "etsy-import.json");
 const pinterestAuthPath = path.join(dataDir, "pinterest-auth.json");
 const pinterestCredentialsPath = path.join(dataDir, "pinterest-credentials.json");
 const aiCredentialsPath = path.join(dataDir, "ai-credentials.json");
 
 let importedShopCache: { mtimeMs: number; value: ImportedEtsyShop | null } | null = null;
+
+function ensureDataDir() {
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true });
+  }
+}
 
 export function readImportedEtsyShop(): ImportedEtsyShop | null {
   if (!existsSync(etsyImportPath)) {
@@ -64,9 +73,7 @@ export function readImportedEtsyShop(): ImportedEtsyShop | null {
 }
 
 export function saveImportedEtsyShop(importedShop: ImportedEtsyShop) {
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
-  }
+  ensureDataDir();
 
   writeFileSync(etsyImportPath, JSON.stringify(importedShop, null, 2), "utf8");
   importedShopCache = { mtimeMs: statSync(etsyImportPath).mtimeMs, value: importedShop };
@@ -85,9 +92,7 @@ export function readPinterestAuth(): PinterestAuth | null {
 }
 
 export function savePinterestAuth(auth: PinterestAuth) {
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
-  }
+  ensureDataDir();
 
   writeFileSync(pinterestAuthPath, JSON.stringify(auth, null, 2), "utf8");
 }
@@ -105,9 +110,7 @@ export function readPinterestAppCredentials(): PinterestAppCredentials | null {
 }
 
 export function savePinterestAppCredentials(credentials: Omit<PinterestAppCredentials, "savedAt">) {
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
-  }
+  ensureDataDir();
 
   writeFileSync(
     pinterestCredentialsPath,
@@ -129,9 +132,7 @@ export function readAiCredentials(): AiCredentials | null {
 }
 
 export function saveAiCredentials(credentials: Omit<AiCredentials, "savedAt">) {
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
-  }
+  ensureDataDir();
 
   writeFileSync(
     aiCredentialsPath,
