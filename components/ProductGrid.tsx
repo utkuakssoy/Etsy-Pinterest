@@ -1,11 +1,32 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { PackageSearch } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { ProductCard } from "@/components/ProductCard";
+import { getStoredEtsyListings } from "@/lib/client-storage";
 import type { EtsyListingView } from "@/types";
 
-export function ProductGrid({ products }: { products: EtsyListingView[] }) {
+export function ProductGrid({ products: initialProducts }: { products: EtsyListingView[] }) {
+  const [storedProducts, setStoredProducts] = useState<EtsyListingView[]>([]);
+
+  useEffect(() => {
+    setStoredProducts(getStoredEtsyListings());
+  }, []);
+
+  const products = useMemo(
+    () => (storedProducts.length ? storedProducts : initialProducts),
+    [storedProducts, initialProducts]
+  );
+
   if (!products.length) {
-    return <EmptyState icon={PackageSearch} title="Henüz ürün yok" description="Önce dashboard ekranına git, Etsy mağaza linkini yapıştır ve ürünleri getir." />;
+    return (
+      <EmptyState
+        icon={PackageSearch}
+        title="No products yet"
+        description="Import your Etsy shop from the dashboard first."
+      />
+    );
   }
 
   return (

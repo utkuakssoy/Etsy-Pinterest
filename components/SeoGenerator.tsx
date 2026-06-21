@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ImagePlus, Sparkles } from "lucide-react";
 import { LoadingState } from "@/components/LoadingState";
 import { SeoResultCard } from "@/components/SeoResultCard";
-import { savePinDraft } from "@/lib/client-storage";
+import { getStoredEtsyListings, savePinDraft } from "@/lib/client-storage";
 import type { EtsyListingView, PinDraftView, PinterestBoardView, SeoGenerationResult } from "@/types";
 
 export function SeoGenerator({
@@ -17,7 +17,9 @@ export function SeoGenerator({
   boards: PinterestBoardView[];
   initialProductId?: string;
 }) {
-  const initialProduct = products.find((product) => product.id === initialProductId) ?? products[0];
+  const [storedProducts, setStoredProducts] = useState<EtsyListingView[]>([]);
+  const availableProducts = storedProducts.length ? storedProducts : products;
+  const initialProduct = availableProducts.find((product) => product.id === initialProductId) ?? availableProducts[0];
   const [productId, setProductId] = useState(initialProduct?.id ?? "");
   const [boardId, setBoardId] = useState(boards[0]?.id ?? "");
   const [result, setResult] = useState<SeoGenerationResult | null>(null);
@@ -28,9 +30,17 @@ export function SeoGenerator({
   const [draftError, setDraftError] = useState<string | null>(null);
 
   const selectedProduct = useMemo(
-    () => products.find((product) => product.id === productId) ?? products[0],
-    [productId, products]
+    () => availableProducts.find((product) => product.id === productId) ?? availableProducts[0],
+    [productId, availableProducts]
   );
+
+  useEffect(() => {
+    const localProducts = getStoredEtsyListings();
+    setStoredProducts(localProducts);
+    if (!productId && localProducts[0]) {
+      setProductId(localProducts[0].id);
+    }
+  }, [productId]);
 
   async function handleGenerate() {
     if (!selectedProduct) {
@@ -101,7 +111,7 @@ export function SeoGenerator({
     }
   }
 
-  if (!products.length) {
+  if (!availableProducts.length) {
     return (
       <section className="rounded-lg border border-neutral-900 bg-[#050505] p-6 text-center">
         <h2 className="text-lg font-semibold text-neutral-100">Import products first</h2>
@@ -133,7 +143,7 @@ export function SeoGenerator({
             setDraftError(null);
           }}
         >
-          {products.map((product) => (
+          {availableProducts.map((product) => (
             <option key={product.id} value={product.id}>
               {product.title}
             </option>

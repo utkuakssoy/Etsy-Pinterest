@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Download, Link as LinkIcon } from "lucide-react";
-import { markEtsyImported } from "@/lib/client-storage";
+import { saveImportedEtsyShop } from "@/lib/client-storage";
 
 export function EtsyImportForm({ label }: { label: string }) {
   const router = useRouter();
@@ -30,7 +30,7 @@ export function EtsyImportForm({ label }: { label: string }) {
       if (!response.ok) {
         throw new Error(payload.error ?? "Import failed");
       }
-      markEtsyImported();
+      saveImportedEtsyShop(payload);
       setImportedCount(payload.listings?.length ?? 0);
       setWarning(payload.importWarning ?? null);
       router.push("/dashboard?imported=1");
