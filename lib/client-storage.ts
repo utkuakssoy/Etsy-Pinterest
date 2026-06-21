@@ -2,6 +2,7 @@ import type { PinDraftView } from "@/types";
 
 const IMPORT_KEY = "pinpilot:etsy-imported";
 const PIN_DRAFTS_KEY = "pinpilot:pin-drafts";
+const PIN_DRAFTS_EVENT = "pinpilot:pin-drafts-updated";
 
 export function markEtsyImported() {
   if (typeof window === "undefined") {
@@ -39,6 +40,7 @@ export function savePinDraft(draft: PinDraftView) {
   const drafts = getStoredPinDrafts();
   const nextDrafts = [draft, ...drafts.filter((item) => item.id !== draft.id)];
   window.localStorage.setItem(PIN_DRAFTS_KEY, JSON.stringify(nextDrafts));
+  window.dispatchEvent(new Event(PIN_DRAFTS_EVENT));
 }
 
 export function updateStoredPinDraft(draft: PinDraftView) {
@@ -51,4 +53,14 @@ export function updateStoredPinDraft(draft: PinDraftView) {
     PIN_DRAFTS_KEY,
     JSON.stringify(drafts.map((item) => (item.id === draft.id ? draft : item)))
   );
+  window.dispatchEvent(new Event(PIN_DRAFTS_EVENT));
+}
+
+export function onPinDraftsChanged(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener(PIN_DRAFTS_EVENT, callback);
+  return () => window.removeEventListener(PIN_DRAFTS_EVENT, callback);
 }

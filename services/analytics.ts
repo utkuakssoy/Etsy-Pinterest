@@ -1,4 +1,3 @@
-import { demoPinDrafts } from "@/lib/demo-data";
 import { getEtsyListings } from "@/services/etsy";
 import { isPinterestConnected } from "@/services/pinterest";
 import type { AnalyticsSnapshotView } from "@/types";
@@ -16,8 +15,8 @@ export async function getAnalyticsSummary() {
   return {
     connected,
     totalProducts: products.length,
-    generatedPins: demoPinDrafts.length,
-    scheduledPins: demoPinDrafts.filter((pin) => pin.status === "scheduled").length,
+    generatedPins: 0,
+    scheduledPins: 0,
     impressions,
     outboundClicks,
     saves,
@@ -29,7 +28,7 @@ export async function getAnalyticsSummary() {
         return { product, impressions: productImpressions };
       })
       .sort((a, b) => b.impressions - a.impressions),
-    recentPinDrafts: demoPinDrafts.slice(0, 4),
+    recentPinDrafts: [],
     snapshots
   };
 }

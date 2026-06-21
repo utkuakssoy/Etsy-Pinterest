@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
-import { DemoModeBadge } from "@/components/DemoModeBadge";
 
 export default function LoginPage() {
   return (
@@ -8,7 +7,6 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-4 flex items-center justify-between">
           <Link href="/dashboard" className="text-lg font-semibold text-white">PinPilot</Link>
-          <DemoModeBadge />
         </div>
         <AuthForm />
       </div>

@@ -48,7 +48,7 @@ export function ScheduleList({ initialDrafts }: { initialDrafts: PinDraftView[] 
               <th className="px-4 py-3 font-medium">Set time</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-neutral-900">
             {drafts.map((draft) => (
               <tr key={draft.id}>
                 <td className="px-4 py-4 font-medium">{draft.title}</td>
@@ -73,7 +73,7 @@ export function ScheduleList({ initialDrafts }: { initialDrafts: PinDraftView[] 
         </table>
       </div>
       {!scheduledDrafts.length && (
-        <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-800">
+        <p className="rounded-md border border-amber-900/70 bg-amber-950/30 p-3 text-sm font-medium text-amber-200">
           You have drafts, but none are scheduled yet.
         </p>
       )}

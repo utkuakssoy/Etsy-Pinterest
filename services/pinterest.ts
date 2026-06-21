@@ -1,4 +1,3 @@
-import { demoPinDrafts } from "@/lib/demo-data";
 import {
   readPinterestAppCredentials,
   readPinterestAuth,
@@ -113,13 +112,12 @@ export async function createPinterestPinDraft(input: Omit<PinDraftView, "id" | "
     ...input,
     id: `pin-${Date.now()}`,
     createdAt: new Date().toISOString(),
-    status: input.status ?? "draft",
-    mode: hasPinterestCredentials() ? "api-ready" : "local"
+    status: input.status ?? "draft"
   };
 }
 
-export async function getPinterestPinDrafts() {
-  return demoPinDrafts;
+export async function getPinterestPinDrafts(): Promise<PinDraftView[]> {
+  return [];
 }
 
 export async function publishPinterestPin(draft: PinDraftView): Promise<PinterestPublishResult> {

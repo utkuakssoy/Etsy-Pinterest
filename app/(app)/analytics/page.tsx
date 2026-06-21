@@ -20,7 +20,7 @@ export default async function AnalyticsPage() {
           </div>
           <h2 className="mt-4 text-xl font-semibold text-neutral-100">Connect your account to see analytics</h2>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-neutral-500">
-            Performance data is hidden until your account is connected. No mock analytics are shown.
+            Performance data is hidden until your account is connected.
           </p>
           <Link href="/settings" className="mt-5 inline-flex items-center justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-black">
             Go to settings
@@ -45,7 +45,7 @@ export default async function AnalyticsPage() {
               <th className="px-4 py-3 font-medium">CTR</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-neutral-900">
             {summary.snapshots.map((row) => (
               <tr key={row.id}>
                 <td className="px-4 py-4">{row.date}</td>

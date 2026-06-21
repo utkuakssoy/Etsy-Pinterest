@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarClock, ImagePlus, LayoutDashboard, Package, Settings, Sparkles } from "lucide-react";
+import { BarChart3, LayoutDashboard, Package, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/products", label: "Products", icon: Package },
-  { href: "/generate", label: "Generate", icon: Sparkles },
-  { href: "/pins", label: "Pins", icon: ImagePlus },
-  { href: "/schedule", label: "Schedule", icon: CalendarClock },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings }
 ];

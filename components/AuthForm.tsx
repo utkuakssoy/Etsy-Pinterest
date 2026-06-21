@@ -6,17 +6,15 @@ import { Mail } from "lucide-react";
 
 export function AuthForm() {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setMessage(null);
     setError(null);
 
-    setMessage("Bu MVP tek kullanicilik calisir. Demo moda devam edebilirsin.");
+    setError("Email sign-in is not configured yet. Continue by importing your Etsy shop.");
     setLoading(false);
   }
 
@@ -48,9 +46,8 @@ export function AuthForm() {
         href="/connect/etsy"
         className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-neutral-800 bg-black px-4 py-2 text-sm font-medium text-neutral-100 shadow-sm"
       >
-        Continue in demo mode
+        Continue
       </Link>
-      {message && <p className="mt-4 rounded-md border border-emerald-900/70 bg-emerald-950/30 p-3 text-sm text-emerald-200">{message}</p>}
       {error && <p className="mt-4 rounded-md border border-red-900/70 bg-red-950/30 p-3 text-sm text-red-200">{error}</p>}
     </form>
   );

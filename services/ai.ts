@@ -1,32 +1,25 @@
 import OpenAI from "openai";
+import { z } from "zod";
 import { env } from "@/lib/env";
 import { readAiCredentials } from "@/services/local-store";
 import type { EtsyListingView, SeoGenerationResult } from "@/types";
 
-const fallbackSeo: SeoGenerationResult = {
-  pinterestTitles: [
-    "Handmade Gift Idea for Thoughtful Shoppers",
-    "A Beautiful Find for Cozy Everyday Style",
-    "Small Shop Favorite for Gift Season"
-  ],
-  pinterestDescriptions: [
-    "Discover a thoughtful handmade product with useful details, gift-ready appeal, and a style that feels personal without being overdone.",
-    "Save this Etsy find for birthdays, holidays, housewarming gifts, or anyone who loves practical pieces with a handmade feel."
-  ],
-  keywords: ["handmade gift", "etsy find", "gift idea", "small shop", "thoughtful gift"],
-  etsyTitleSuggestion: "Handmade Etsy Gift for Everyday Use",
-  etsyDescriptionSuggestion:
-    "Highlight the product's real materials, size, use case, personalization options, shipping timeline, and gift-ready qualities in clear buyer-focused language.",
-  boardSuggestions: ["Thoughtful Gift Ideas", "Etsy Finds", "Small Shop Favorites"],
-  pinConcepts: [
-    {
-      template: "Product close-up with clean text overlay",
-      headline: "A Thoughtful Handmade Gift",
-      visualDirection: "Use a bright product photo with natural props and one concise headline.",
-      targetKeyword: "handmade gift"
-    }
-  ]
-};
+const seoResultSchema = z.object({
+  pinterestTitles: z.array(z.string()).default([]),
+  pinterestDescriptions: z.array(z.string()).default([]),
+  keywords: z.array(z.string()).default([]),
+  etsyTitleSuggestion: z.string().default(""),
+  etsyDescriptionSuggestion: z.string().default(""),
+  boardSuggestions: z.array(z.string()).default([]),
+  pinConcepts: z.array(
+    z.object({
+      template: z.string().default(""),
+      headline: z.string().default(""),
+      visualDirection: z.string().default(""),
+      targetKeyword: z.string().default("")
+    })
+  ).default([])
+});
 
 export async function generateSeoForListing(listing: EtsyListingView): Promise<SeoGenerationResult> {
   const credentials = getAiCredentials();
@@ -39,7 +32,7 @@ export async function generateSeoForListing(listing: EtsyListingView): Promise<S
     return generateSeoWithOpenAi(listing, credentials.openaiApiKey);
   }
 
-  return generateMockSeo(listing);
+  throw new Error("Add a Gemini or OpenAI API key in Settings before generating content.");
 }
 
 export function getAiCredentials() {
@@ -83,8 +76,7 @@ async function generateSeoWithOpenAi(listing: EtsyListingView, apiKey: string): 
     throw new Error("OpenAI returned an empty response");
   }
 
-  const parsed = JSON.parse(content) as SeoGenerationResult;
-  return parsed;
+  return parseSeoResult(content);
 }
 
 async function generateSeoWithGemini(listing: EtsyListingView, apiKey: string): Promise<SeoGenerationResult> {
@@ -124,7 +116,7 @@ async function generateSeoWithGemini(listing: EtsyListingView, apiKey: string): 
     throw new Error("Gemini returned an empty response");
   }
 
-  return JSON.parse(content) as SeoGenerationResult;
+  return parseSeoResult(content);
 }
 
 function buildSeoPrompt(listing: EtsyListingView) {
@@ -162,38 +154,10 @@ ${JSON.stringify(listing, null, 2)}
 `;
 }
 
-export function generateMockSeo(listing: EtsyListingView): SeoGenerationResult {
-  const primaryTag = listing.tags[0] ?? "etsy gift";
-  const giftAngle = listing.tags.find((tag) => tag.toLowerCase().includes("gift")) ?? "thoughtful gift";
-
-  return {
-    ...fallbackSeo,
-    pinterestTitles: [
-      `${listing.title.slice(0, 70)}`,
-      `${giftAngle.replace(/\b\w/g, (char) => char.toUpperCase())} from a Small Etsy Shop`,
-      `Save This ${listing.category.split("/").pop()?.trim() ?? "Etsy Find"} Idea`
-    ],
-    pinterestDescriptions: [
-      `${listing.description.slice(0, 180)} Save this Etsy find for shoppers looking for ${primaryTag} with a personal, handmade feel.`,
-      `A buyer-friendly ${primaryTag} idea for birthdays, holidays, thank-you gifts, or a practical treat for everyday use.`
-    ],
-    keywords: Array.from(new Set([primaryTag, giftAngle, ...listing.tags, listing.category])).slice(0, 10),
-    etsyTitleSuggestion: `${listing.title} | ${giftAngle}`,
-    etsyDescriptionSuggestion: `${listing.description}\n\nGreat for shoppers searching for ${primaryTag}, ${giftAngle}, and small shop finds with authentic product details.`,
-    boardSuggestions: ["Thoughtful Gift Ideas", listing.category.split("/").pop()?.trim() ?? "Etsy Finds", "Small Shop Favorites"],
-    pinConcepts: [
-      {
-        template: "Clean product hero pin",
-        headline: listing.title.split(" ").slice(0, 7).join(" "),
-        visualDirection: "Feature the main product image with generous whitespace and a small high-contrast headline.",
-        targetKeyword: primaryTag
-      },
-      {
-        template: "Gift guide pin",
-        headline: `Gift Idea: ${giftAngle}`,
-        visualDirection: "Pair the product image with a seasonal gift-guide frame and restrained typography.",
-        targetKeyword: giftAngle
-      }
-    ]
-  };
+function parseSeoResult(content: string): SeoGenerationResult {
+  try {
+    return seoResultSchema.parse(JSON.parse(content));
+  } catch {
+    throw new Error("AI returned invalid JSON. Try again or switch API provider.");
+  }
 }
