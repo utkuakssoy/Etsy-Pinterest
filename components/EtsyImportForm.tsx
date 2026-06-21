@@ -1,12 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Download, Link as LinkIcon } from "lucide-react";
 import { saveImportedEtsyShop } from "@/lib/client-storage";
 
 export function EtsyImportForm({ label }: { label: string }) {
-  const router = useRouter();
   const [shopUrl, setShopUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +31,7 @@ export function EtsyImportForm({ label }: { label: string }) {
       saveImportedEtsyShop(payload);
       setImportedCount(payload.listings?.length ?? 0);
       setWarning(payload.importWarning ?? null);
-      router.push("/dashboard?imported=1");
-      router.refresh();
+      window.location.href = "/dashboard?imported=1";
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : "Import failed");
     } finally {
