@@ -14,7 +14,7 @@ export function PinterestConnectCard({
   const credentialsReady = hasPinterestCredentials();
 
   return (
-    <section className="max-w-3xl rounded-lg border border-neutral-900 bg-[#050505] p-5 shadow-sm">
+    <section className="rounded-lg border border-neutral-900 bg-[#050505] p-5 shadow-sm">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <p className="text-sm font-medium text-neutral-500">Connected account</p>

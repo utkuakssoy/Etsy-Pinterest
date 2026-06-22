@@ -6,14 +6,32 @@ const MAX_PUBLIC_LISTINGS = 120;
 const MAX_SHOP_PAGES = 8;
 
 export async function importEtsyShop(shopUrl: string) {
-  const parsedShop = parseEtsyShopUrl(shopUrl);
-  if (!parsedShop) {
-    throw new Error("Please enter a valid Etsy shop URL, for example https://www.etsy.com/shop/ShopName.");
+  const parsedInput = parseEtsyUrl(shopUrl);
+  if (!parsedInput) {
+    throw new Error("Please enter a valid Etsy shop or listing URL.");
   }
 
-  const importedShop = env.etsyApiKey ? await importOfficialEtsyShop(parsedShop, env.etsyApiKey) : await importPublicEtsyShop(parsedShop);
-  saveImportedEtsyShop(importedShop);
-  return { mode: env.etsyApiKey ? ("official-api" as const) : ("public-shop" as const), ...importedShop };
+  const currentImport = readImportedEtsyShop();
+  const importedShop =
+    parsedInput.type === "listing"
+      ? await importSingleEtsyListing(parsedInput, currentImport?.shop)
+      : env.etsyApiKey
+        ? await importOfficialEtsyShop(parsedInput, env.etsyApiKey)
+        : await importPublicEtsyShop(parsedInput);
+  const mergedImport = currentImport
+    ? {
+        ...importedShop,
+        shop: importedShop.shop ?? currentImport.shop,
+        listings: mergeListings([...importedShop.listings, ...currentImport.listings])
+      }
+    : importedShop;
+
+  saveImportedEtsyShop(mergedImport);
+  return {
+    mode: parsedInput.type === "listing" ? ("single-listing" as const) : env.etsyApiKey ? ("official-api" as const) : ("public-shop" as const),
+    addedCount: mergedImport.listings.length - (currentImport?.listings.length ?? 0),
+    ...mergedImport
+  };
 }
 
 export async function getEtsyListings() {
@@ -25,11 +43,21 @@ export async function getImportedEtsyShop() {
 }
 
 type ParsedShopUrl = {
+  type: "shop";
   shopName: string;
   url: string;
 };
 
-function parseEtsyShopUrl(input: string): ParsedShopUrl | null {
+type ParsedListingUrl = {
+  type: "listing";
+  listingId: string;
+  slug: string;
+  url: string;
+};
+
+type ParsedEtsyUrl = ParsedShopUrl | ParsedListingUrl;
+
+function parseEtsyUrl(input: string): ParsedEtsyUrl | null {
   try {
     const url = new URL(input.trim());
     if (!url.hostname.toLowerCase().endsWith("etsy.com")) {
@@ -37,6 +65,16 @@ function parseEtsyShopUrl(input: string): ParsedShopUrl | null {
     }
 
     const parts = url.pathname.split("/").filter(Boolean);
+    const listingIndex = parts.findIndex((part) => part.toLowerCase() === "listing");
+    if (listingIndex >= 0 && parts[listingIndex + 1]) {
+      return {
+        type: "listing",
+        listingId: parts[listingIndex + 1],
+        slug: parts[listingIndex + 2] ?? "etsy-listing",
+        url: `https://www.etsy.com/listing/${parts[listingIndex + 1]}/${parts[listingIndex + 2] ?? "etsy-listing"}`
+      };
+    }
+
     const shopIndex = parts.findIndex((part) => part.toLowerCase() === "shop");
     const shopName = shopIndex >= 0 ? parts[shopIndex + 1] : parts[0];
 
@@ -45,12 +83,85 @@ function parseEtsyShopUrl(input: string): ParsedShopUrl | null {
     }
 
     return {
+      type: "shop",
       shopName,
       url: `https://www.etsy.com/shop/${shopName}`
     };
   } catch {
     return null;
   }
+}
+
+async function importSingleEtsyListing(
+  listing: ParsedListingUrl,
+  existingShop?: { id: string; etsyShopId: string; name: string; url: string }
+) {
+  const shop: ParsedShopUrl = {
+    type: "shop",
+    shopName: existingShop?.name ?? "manual-import",
+    url: existingShop?.url ?? "https://www.etsy.com"
+  };
+  const listingView = env.etsyApiKey
+    ? await fetchOfficialListingById(shop, listing.listingId, env.etsyApiKey).catch(() => fetchPublicSingleListing(shop, listing))
+    : await fetchPublicSingleListing(shop, listing);
+
+  return {
+    shop: existingShop ?? {
+      id: `shop-${slug(shop.shopName)}`,
+      etsyShopId: shop.shopName,
+      name: shop.shopName,
+      url: shop.url
+    },
+    listings: [listingView],
+    importedAt: new Date().toISOString()
+  };
+}
+
+async function fetchOfficialListingById(shop: ParsedShopUrl, listingId: string, apiKey: string) {
+  const listing = await fetchEtsyApi<EtsyApiListing>(`/listings/${listingId}?includes=Images`, apiKey);
+  return officialListingToView(shop, listing, 0);
+}
+
+async function fetchPublicSingleListing(shop: ParsedShopUrl, listing: ParsedListingUrl) {
+  const title = titleFromUrl(listing.url);
+  let description = title;
+  let image: string | undefined;
+
+  const response = await fetch(listing.url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 PinPilot local app",
+      Accept: "text/html"
+    },
+    cache: "no-store"
+  }).catch(() => null);
+
+  if (response?.ok) {
+    const html = normalizeHtml(await response.text());
+    const pageTitle = decodeHtml(html.match(/<meta property="og:title" content="([^"]+)"/i)?.[1] ?? "");
+    const pageDescription = decodeHtml(html.match(/<meta property="og:description" content="([^"]+)"/i)?.[1] ?? "");
+    image = html.match(/<meta property="og:image" content="([^"]+)"/i)?.[1];
+    description = pageDescription || title;
+
+    return toListing({
+      shop,
+      listingId: listing.listingId,
+      title: pageTitle || title,
+      description,
+      image,
+      listingUrl: listing.url,
+      index: 0
+    });
+  }
+
+  return toListing({
+    shop,
+    listingId: listing.listingId,
+    title,
+    description,
+    image,
+    listingUrl: listing.url,
+    index: 0
+  });
 }
 
 async function importPublicEtsyShop(shop: ParsedShopUrl) {
@@ -383,6 +494,16 @@ function decodeXml(value: string) {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
+}
+
+function decodeHtml(value: string) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .trim();
 }
 
 function stripHtml(value: string) {

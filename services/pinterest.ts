@@ -31,7 +31,7 @@ export function getPinterestAuthorizeUrl({ redirectUri, state }: { redirectUri: 
   const credentials = getPinterestCredentials();
 
   if (!credentials.clientId || !credentials.clientSecret) {
-    throw new Error("Pinterest app bilgileri eksik. Ayarlar ekranindan Client ID ve Client Secret ekle.");
+    throw new Error("App credentials are missing. Add Client ID and Client Secret in Settings.");
   }
 
   const params = new URLSearchParams({
@@ -49,7 +49,7 @@ export async function exchangePinterestCode({ code, redirectUri }: { code: strin
   const credentials = getPinterestCredentials();
 
   if (!credentials.clientId || !credentials.clientSecret) {
-    throw new Error("Pinterest app bilgileri eksik.");
+    throw new Error("App credentials are missing.");
   }
 
   const basicAuth = Buffer.from(`${credentials.clientId}:${credentials.clientSecret}`).toString("base64");

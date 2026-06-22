@@ -41,6 +41,7 @@ export function ProductDetailClient({
   }
 
   const imageUrl = product.images[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80";
+  const detailLines = formatDescription(product.description);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -55,20 +56,56 @@ export function ProductDetailClient({
           className="aspect-[4/3] w-full object-cover"
         />
       </div>
-      <section className="rounded-lg border border-neutral-900 bg-[#050505] p-6 shadow-sm">
-        <p className="text-sm font-medium text-neutral-500">{product.category}</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-100">{product.title}</h1>
-        <p className="mt-3 text-lg font-semibold text-neutral-300">{formatCurrency(product.price, product.currency)}</p>
-        <p className="mt-5 leading-7 text-neutral-500">{product.description}</p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {product.tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-neutral-800 bg-black px-3 py-1 text-xs font-medium text-neutral-500">
-              {tag}
-            </span>
-          ))}
+      <section className="space-y-4 rounded-lg border border-neutral-900 bg-[#050505] p-6 shadow-sm">
+        <div className="border-b border-neutral-900 pb-5">
+          <p className="text-xs font-medium uppercase text-neutral-500">{product.category}</p>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-100 md:text-3xl">{product.title}</h1>
+          <p className="mt-3 text-base font-semibold text-neutral-300">{formatCurrency(product.price, product.currency)}</p>
         </div>
+
+        <div className="rounded-lg border border-neutral-900 bg-black p-4">
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-900 pb-3">
+            <h2 className="text-sm font-semibold text-neutral-100">Product details</h2>
+            <a href={product.listingUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-neutral-400 underline underline-offset-4">
+              Open listing
+            </a>
+          </div>
+          <div className="mt-3 max-h-72 space-y-2 overflow-auto pr-2 text-sm leading-6 text-neutral-400">
+            {detailLines.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+          </div>
+        </div>
+
+        {product.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {product.tags.map((tag) => (
+              <span key={tag} className="rounded-full border border-neutral-800 bg-black px-3 py-1 text-xs font-medium text-neutral-500">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
         <ProductActions product={product} />
       </section>
     </div>
   );
+}
+
+function formatDescription(description: string) {
+  const cleaned = description.replace(/\s+/g, " ").trim();
+  const lines = cleaned
+    .split(/\s(?:-|•)\s|\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) {
+    return lines;
+  }
+
+  return cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }

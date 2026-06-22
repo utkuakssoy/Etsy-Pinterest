@@ -3,11 +3,16 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import type { EtsyListingView } from "@/types";
 
-export function ProductCard({ product }: { product: EtsyListingView }) {
+export function ProductCard({ product, isNew = false }: { product: EtsyListingView; isNew?: boolean }) {
   const imageUrl = product.images[0] || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80";
 
   return (
-    <Link href={`/products/${product.id}`} className="group overflow-hidden rounded-md border border-neutral-900 bg-[#050505] shadow-sm transition hover:border-neutral-700">
+    <Link href={`/products/${product.id}`} className="group relative overflow-hidden rounded-md border border-neutral-900 bg-[#050505] shadow-sm transition hover:border-neutral-700">
+      {isNew && (
+        <span className="absolute right-2 top-2 z-10 rounded-full border border-violet-400/50 bg-violet-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+          New
+        </span>
+      )}
       <Image
         src={imageUrl}
         alt={product.title}

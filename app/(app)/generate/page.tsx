@@ -14,7 +14,7 @@ export default async function GeneratePage({
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="space-y-5">
       <header>
         <p className="text-sm font-medium text-neutral-500">AI content</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight text-neutral-100">Generate and save a draft</h1>

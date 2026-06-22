@@ -7,8 +7,8 @@ export default async function SchedulePage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm font-medium text-neutral-500">Yayın planı</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Planlanan pinler</h1>
+        <p className="text-sm font-medium text-neutral-500">Schedule</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Scheduled pins</h1>
       </header>
       <ScheduleList initialDrafts={drafts} />
     </div>

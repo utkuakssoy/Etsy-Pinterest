@@ -2,6 +2,7 @@ import type { EtsyListingView, PinDraftView } from "@/types";
 
 const IMPORT_KEY = "pinpilot:etsy-imported";
 const ETSY_IMPORT_KEY = "pinpilot:etsy-import";
+const LAST_IMPORTED_IDS_KEY = "pinpilot:last-imported-listing-ids";
 const PIN_DRAFTS_KEY = "pinpilot:pin-drafts";
 const PIN_DRAFTS_EVENT = "pinpilot:pin-drafts-updated";
 
@@ -27,11 +28,33 @@ export function markEtsyImported() {
 
 export function saveImportedEtsyShop(importedShop: StoredEtsyImport) {
   if (typeof window === "undefined") {
-    return;
+    return { addedCount: 0, totalCount: importedShop.listings.length };
   }
 
+  const currentListings = getStoredEtsyListings();
+  const seen = new Set(currentListings.map((listing) => listing.etsyListingId));
+  const newListings: EtsyListingView[] = [];
+
+  for (const listing of importedShop.listings) {
+    if (seen.has(listing.etsyListingId)) {
+      continue;
+    }
+
+    seen.add(listing.etsyListingId);
+    newListings.push(listing);
+  }
+
+  const mergedListings = [...newListings, ...currentListings];
+  const newListingIds = newListings.map((listing) => listing.id);
+
   window.localStorage.setItem(IMPORT_KEY, "true");
-  window.localStorage.setItem(ETSY_IMPORT_KEY, JSON.stringify(importedShop));
+  window.localStorage.setItem(ETSY_IMPORT_KEY, JSON.stringify({ ...importedShop, listings: mergedListings }));
+  window.localStorage.setItem(LAST_IMPORTED_IDS_KEY, JSON.stringify(newListingIds));
+
+  return {
+    addedCount: newListings.length,
+    totalCount: mergedListings.length
+  };
 }
 
 export function getStoredEtsyListings() {
@@ -42,6 +65,18 @@ export function getStoredEtsyListings() {
   try {
     const importedShop = JSON.parse(window.localStorage.getItem(ETSY_IMPORT_KEY) ?? "null") as StoredEtsyImport | null;
     return importedShop?.listings ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export function getLastImportedListingIds() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    return JSON.parse(window.localStorage.getItem(LAST_IMPORTED_IDS_KEY) ?? "[]") as string[];
   } catch {
     return [];
   }

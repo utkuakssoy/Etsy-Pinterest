@@ -6,7 +6,7 @@ import { BarChart3, LayoutDashboard, Package, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/products", label: "Products", icon: Package },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings }
@@ -55,12 +55,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        <div className="hidden border-t border-neutral-900 p-3 text-xs text-neutral-600 md:block">
-          <div className="rounded-md border border-neutral-900 bg-neutral-950 p-3">
-            Local workspace
-          </div>
-        </div>
       </div>
     </aside>
   );
